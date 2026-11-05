@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+
+# Expo
+.expo/
+web-build/
+
+# Build
+dist/
+build/
+
+# Logs
+*.log
+
+# Backup files
+*.sdk58-backup
+
+# OS
+.DS_Store
+Thumbs.db
+
+*.sdk58-backup
