@@ -42,7 +42,18 @@ export interface CatalogueSyncOptions {
   query: string;
   type: CatalogueMediaType;
   maxPagesPerRun: number;
+
+  /** Minimum interval between outgoing ReelDB request starts. */
   requestDelayMs: number;
+
+  /** Maximum simultaneous title-detail requests. Defaults to 3. */
+  concurrency?: number;
+
+  /** Retries for transient provider errors. Defaults to 2. */
+  maxRetries?: number;
+
+  /** Initial exponential backoff delay. Defaults to 250ms. */
+  retryBaseDelayMs?: number;
 }
 
 export interface CatalogueSyncResult {

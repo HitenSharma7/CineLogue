@@ -105,8 +105,6 @@ describe("API integration tests", () => {
         .get("/api/v1/movies/search")
         .query({ q: "NonexistentFilmXYZ" });
 
-      // Current search mapper expects a results array.
-      // A provider-level not-found result is not the same as an empty result list.
       expect(response.status).toBe(502);
       expect(response.body.success).toBe(false);
       expect(mockedReeldbGet).toHaveBeenCalledOnce();
@@ -135,17 +133,21 @@ describe("API integration tests", () => {
     });
 
     it("returns movie details for a valid IMDb ID", async () => {
-      mockedReeldbGet.mockResolvedValueOnce({
-        found: true,
-        data: {
-          ids: { imdb: "tt0816692", tmdb: 157336 },
-          title: "Interstellar",
-          year: 2014,
-          type: "movie",
-          poster: "https://example.com/interstellar.jpg",
-          description: "A science-fiction film.",
-        },
-      });
+      mockedReeldbGet
+        .mockResolvedValueOnce({
+          found: true,
+          data: {
+            ids: { imdb: "tt0816692", tmdb: 157336 },
+            title: "Interstellar",
+            year: 2014,
+            type: "movie",
+            poster: "https://example.com/interstellar.jpg",
+            description: "A science-fiction film.",
+          },
+        })
+        .mockResolvedValueOnce({
+          found: false,
+        });
 
       const response = await request(app).get(
         "/api/v1/movies/tt0816692",
@@ -155,22 +157,37 @@ describe("API integration tests", () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data.title).toBe("Interstellar");
 
-      expect(mockedReeldbGet).toHaveBeenCalledWith("/v1/title", {
-        imdb: "tt0816692",
-        type: undefined,
-      });
+      expect(mockedReeldbGet).toHaveBeenNthCalledWith(
+        1,
+        "/v1/title",
+        {
+          imdb: "tt0816692",
+          type: undefined,
+          append: "ratings,cast,providers",
+        },
+      );
+
+      expect(mockedReeldbGet).toHaveBeenNthCalledWith(
+        2,
+        "/v1/title/tt0816692/cast",
+        {},
+      );
     });
 
     it("passes the requested type and numeric ID string to the provider", async () => {
-      mockedReeldbGet.mockResolvedValueOnce({
-        found: true,
-        data: {
-          ids: { imdb: "tt0468569", tmdb: 155 },
-          title: "The Dark Knight",
-          year: 2008,
-          type: "movie",
-        },
-      });
+      mockedReeldbGet
+        .mockResolvedValueOnce({
+          found: true,
+          data: {
+            ids: { imdb: "tt0468569", tmdb: 155 },
+            title: "The Dark Knight",
+            year: 2008,
+            type: "movie",
+          },
+        })
+        .mockResolvedValueOnce({
+          found: false,
+        });
 
       const response = await request(app)
         .get("/api/v1/movies/155")
@@ -179,10 +196,21 @@ describe("API integration tests", () => {
       expect(response.status).toBe(200);
       expect(response.body.data.title).toBe("The Dark Knight");
 
-      expect(mockedReeldbGet).toHaveBeenCalledWith("/v1/title", {
-        tmdb: "155",
-        type: "movie",
-      });
+      expect(mockedReeldbGet).toHaveBeenNthCalledWith(
+        1,
+        "/v1/title",
+        {
+          tmdb: "155",
+          type: "movie",
+          append: "ratings,cast,providers",
+        },
+      );
+
+      expect(mockedReeldbGet).toHaveBeenNthCalledWith(
+        2,
+        "/v1/title/155/cast",
+        {},
+      );
     });
 
     it("returns 404 when a movie ID does not exist", async () => {
