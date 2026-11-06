@@ -26,3 +26,14 @@ export const titleDetailsQuerySchema = z.object({
 export type SearchQuery = z.infer<typeof searchQuerySchema>;
 export type TitleIdParams = z.infer<typeof titleIdParamsSchema>;
 export type TitleDetailsQuery = z.infer<typeof titleDetailsQuerySchema>;
+export const genreParamsSchema = z.object({
+  slug: z.string().trim().min(1).max(100),
+});
+
+export const genreQuerySchema = z.object({
+  type: z.enum(["all", "movie", "series"]).default("all"),
+  page: z.coerce.number().int().min(1).max(100).default(1),
+});
+
+export type GenreParams = z.infer<typeof genreParamsSchema>;
+export type GenreQuery = z.infer<typeof genreQuerySchema>;

@@ -7,6 +7,7 @@ import type {
   TitleDetailsQuery,
   TitleIdParams,
 } from "./movies.validation";
+import { GENRE_CATALOGUE } from "./genres/genre.catalogue";
 
 export const searchMovies: RequestHandler = async (_req, res) => {
   const query = getValidated<SearchQuery>(res, "query");
@@ -26,5 +27,11 @@ export const getMovieDetails: RequestHandler = async (_req, res) => {
   res.status(200).json({
     success: true,
     data: result,
+  });
+};
+export const getGenres: RequestHandler = async (_req, res) => {
+  res.status(200).json({
+    success: true,
+    data: GENRE_CATALOGUE,
   });
 };
