@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/Skeleton';
 import { StateView } from '@/components/StateView';
 import { BRAND } from '@/config/brand';
 import { EDITORS_PICKS, EDITORS_PICKS_LABEL, EDITORS_PICKS_SUBTITLE, HERO_COUNT } from '@/config/editorsPicks';
+import { HALL_OF_FAME, HALL_OF_FAME_SUBTITLE, HALL_OF_FAME_TITLE } from '@/config/hallOfFame';
 import { MIN_TOUCH_TARGET, RADII, SPACING } from '@/constants/layout';
 import { useEditorsPicks } from '@/hooks/useEditorsPicks';
 import { useOpenTitle } from '@/hooks/useOpenTitle';
@@ -51,6 +52,7 @@ export function HomeScreen() {
   const reduce = useReducedMotionPref();
   const openTitle = useOpenTitle();
   const picks = useEditorsPicks(EDITORS_PICKS);
+  const hallOfFame = useEditorsPicks(HALL_OF_FAME);
 
   const goSearch = useCallback(() => router.push('/(tabs)/search'), [router]);
   const goProfile = useCallback(() => router.push('/(tabs)/profile'), [router]);
@@ -153,7 +155,20 @@ export function HomeScreen() {
           />
         </Animated.View>
 
-        <Animated.View entering={enter(1)} style={{ paddingHorizontal: r.gutter }}>
+        <Animated.View entering={enter(1)}>
+          <PosterShelf
+            title={HALL_OF_FAME_TITLE}
+            subtitle={HALL_OF_FAME_SUBTITLE}
+            size="lg"
+            status={hallOfFame.status}
+            items={hallOfFame.items}
+            errorMessage={hallOfFame.error?.message}
+            onOpen={openTitle}
+            onRetry={hallOfFame.retry}
+          />
+        </Animated.View>
+
+        <Animated.View entering={enter(2)} style={{ paddingHorizontal: r.gutter }}>
           <View style={{ padding: SPACING.xl, borderRadius: RADII.xl, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, gap: SPACING.md, overflow: 'hidden' }}>
             <View pointerEvents="none" style={{ position: 'absolute', right: -50, top: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: theme.colors.accent, opacity: theme.isDark ? 0.22 : 0.12 }} />
             <AppText style={{ fontSize: 26, lineHeight: 32, fontWeight: '800' }} accessibilityRole="header">
