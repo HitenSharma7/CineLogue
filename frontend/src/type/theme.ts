@@ -1,9 +1,3 @@
-export type ThemeId =
-  | 'midnight'
-  | 'amoled'
-  | 'gold'
-  | 'aurora'
-  | 'light';
 
 export type ThemeColors = {
   background: string;
@@ -13,20 +7,20 @@ export type ThemeColors = {
   text: string;
   textMuted: string;
   accent: string;
-  accentText: string; // text drawn on top of accent
+  accentText: string;
+  accentSoft: string;
+  accentGradient: [string, string];
+  rating: string;
   success: string;
   danger: string;
   overlay: string;
   tabBar: string;
-  /** Hero / atmospheric gradient stops, top to bottom. */
   heroGradient: [string, string];
 };
 
-export type AppTheme = {
-  id: ThemeId;
+export type AppTheme<TId extends string = string> = {
+  id: TId;
   label: string;
   isDark: boolean;
   colors: ThemeColors;
 };
-
-export type ThemePreference = ThemeId | 'system';

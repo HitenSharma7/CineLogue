@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useTheme } from '@/styles/ThemeProvider';
+import type { ColorValue } from 'react-native';
 
 type IconName = { ios: string; android: string; web: string };
 const ICONS: Record<string, IconName> = {
@@ -33,11 +34,18 @@ function TabIcon({ name, color, focused }: { name: string; color: string; focuse
   );
 }
 
+
+
 const icon =
   (name: keyof typeof ICONS) =>
-  // eslint-disable-next-line react/display-name
-  ({ color, focused }: { color: string; focused: boolean }) =>
-    <TabIcon name={name} color={color} focused={focused} />;
+  ({ color, focused }: { color: ColorValue; focused: boolean; size: number }) =>
+    (
+      <TabIcon
+        name={name}
+        color={color == null ? '#888888' : String(color)}
+        focused={focused}
+      />
+    );
 
 export default function TabsLayout() {
   const { theme } = useTheme();

@@ -1,58 +1,123 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
 import { useColorScheme } from 'react-native';
+
 import { storage } from '@/helpers/storage';
-import { DEFAULT_DARK_THEME, DEFAULT_LIGHT_THEME, THEMES } from '@/constants/themes';
-import type { AppTheme, ThemeId, ThemePreference } from '@/type/theme';
+
+import {
+  DEFAULT_DARK_THEME,
+  DEFAULT_LIGHT_THEME,
+  THEMES,
+} from '@/constants/themes';
+
+import type {
+  ThemeId,
+  ThemePreference,
+} from '@/constants/themes';
+
+import type { AppTheme } from '@/type/theme';
 
 const STORAGE_KEY = 'cinelogue.theme';
 
 type ThemeContextValue = {
-  theme: AppTheme;
+  theme: AppTheme<ThemeId>;
   preference: ThemePreference;
-  setPreference: (p: ThemePreference) => void;
+  setPreference: (preference: ThemePreference) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function isThemeId(v: string | null): v is ThemeId {
-  return v !== null && v in THEMES;
+function isThemeId(value: string | null): value is ThemeId {
+  return value !== null &&
+    Object.prototype.hasOwnProperty.call(THEMES, value);
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const system = useColorScheme();
-  const [preference, setPref] = useState<ThemePreference>('system');
 
+  const [preference, setPref] =
+    useState<ThemePreference>('system');
+
+  // Load saved theme preference.
   useEffect(() => {
     let alive = true;
-    storage.getItem(STORAGE_KEY).then((v) => {
-      if (!alive) return;
-      if (v === 'system' || isThemeId(v)) setPref(v);
-    });
+
+    storage
+      .getItem(STORAGE_KEY)
+      .then((value) => {
+        if (!alive || value === null) return;
+
+        if (value === 'system' || isThemeId(value)) {
+          setPref(value);
+        }
+      })
+      .catch(() => {
+        // Keep system preference if storage fails.
+      });
+
     return () => {
       alive = false;
     };
   }, []);
 
-  const setPreference = useCallback((p: ThemePreference) => {
-    setPref(p);
-    storage.setItem(STORAGE_KEY, p).catch(() => {});
-  }, []);
+  // Update preference and persist it.
+  const setPreference = useCallback(
+    (newPreference: ThemePreference) => {
+      setPref(newPreference);
 
+      storage
+        .setItem(STORAGE_KEY, newPreference)
+        .catch(() => {
+          // Preference remains active for this session.
+        });
+    },
+    [],
+  );
+
+  // Resolve the active theme.
   const value = useMemo<ThemeContextValue>(() => {
-    const id: ThemeId =
+    const themeId: ThemeId =
       preference === 'system'
         ? system === 'light'
           ? DEFAULT_LIGHT_THEME
           : DEFAULT_DARK_THEME
         : preference;
-    return { theme: THEMES[id], preference, setPreference };
+
+    return {
+      theme: THEMES[themeId],
+      preference,
+      setPreference,
+    };
   }, [preference, system, setPreference]);
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
+// Custom theme hook.
 export function useTheme(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useTheme must be used inside <ThemeProvider>');
-  return ctx;
+  const context = useContext(ThemeContext);
+
+  if (!context) {
+    throw new Error(
+      'useTheme must be used inside <ThemeProvider>',
+    );
+  }
+
+  return context;
 }

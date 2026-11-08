@@ -7,7 +7,7 @@ import { THEME_ORDER, THEMES } from '@/constants/themes';
 import { MIN_TOUCH_TARGET, RADII, SPACING } from '@/constants/layout';
 import { useReducedMotionPref } from '@/hooks/useReducedMotionPref';
 import { useTheme } from '@/styles/ThemeProvider';
-import type { ThemePreference } from '@/type/theme';
+import type { ThemePreference } from '@/constants/themes';
 
 export function SettingsScreen() {
   const { theme, preference, setPreference } = useTheme();
