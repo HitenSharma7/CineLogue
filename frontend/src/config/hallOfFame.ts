@@ -24,6 +24,6 @@ export const HALL_OF_FAME: readonly HallOfFamePick[] = [
   { id: 'tt0109830' }, // Forrest Gump
   { id: 'tt0137523' }, // Fight Club
   { id: 'tt0245429' }, // Spirited Away
-  { id: 'tt0468569' }, // The Dark Knight
-  { id: 'tt6751668' }, // Parasite
+  { id: 'tt0071562' }, // The Godfather Part II
+  { id: 'tt0050083' }, // 12 Angry Men
 ];
