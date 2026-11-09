@@ -1,4 +1,3 @@
-
 export interface TitleIds {
   imdb: string | null;
   tmdb: number | null;
@@ -38,6 +37,18 @@ export interface Credits {
   guests: CrewMember[];
   counts: CreditsCounts | null;
 }
+
+export interface LegacyProviderRating {
+  rating: number | null;
+  votes: number | null;
+}
+
+export interface LegacyTitleRatings {
+  imdb: LegacyProviderRating | null;
+  tmdb: LegacyProviderRating | null;
+  mdblist: LegacyProviderRating | null;
+}
+
 export interface TitleDetails {
   ids: TitleIds;
   title: string;
@@ -48,17 +59,19 @@ export interface TitleDetails {
   genres: string[];
   runtime: number | null;
   releaseDate: string | null;
-
   // Keep these so existing frontend code doesn't break.
   director: string[];
   cast: string[];
-
   // Full cast and crew metadata.
   credits: Credits | null;
-
   backdrop: string | null;
+  /** Backward-compatible IMDb-first score field. */
   rating: number | null;
-  ratings: import("../ratings/ratings.types").TitleRatings;
+  /** Backward-compatible shape retained for existing clients. */
+  ratings: LegacyTitleRatings;
+  /** Provider-native ratings with scales and source links. */
+  providerRatings: import("../ratings/ratings.types").TitleRatings;
+  /** Attributed normalized score suitable for Home UI. */
   featuredRating: import("../ratings/ratings.types").FeaturedRating | null;
 }
 
