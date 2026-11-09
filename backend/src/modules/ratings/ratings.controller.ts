@@ -1,0 +1,1 @@
+const rating = ratings.imdb?.rating ?? toRating(result.data.rating ?? result.data.imdbRating);  
