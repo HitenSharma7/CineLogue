@@ -1,6 +1,7 @@
 
 import { z } from "zod";
 import { AppError } from "../../utils/AppError";
+import { getTitleRatings } from "../ratings/ratings.service";
 import type {
   Credits,
   CrewMember,
@@ -9,7 +10,6 @@ import type {
   TitleDetails,
   TitleIds,
   TitleSummary,
-  TitleRatings,
 } from "./movies.types";
 
 type RawRecord = Record<string, unknown>;
@@ -98,41 +98,6 @@ function toScore(value: unknown): number | null {
   return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10
     ? parsed
     : null;
-}
-function toRating(value: unknown): number | null {
-  const parsed =
-    typeof value === "number"
-      ? value
-      : typeof value === "string" && value.trim() !== ""
-        ? Number(value)
-        : Number.NaN;
-
-  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10
-    ? parsed
-    : null;
-}
-
-function readProviderRating(
-  value: unknown,
-): { rating: number | null; votes: number | null } | null {
-  if (!isRecord(value)) return null;
-
-  const rating = toRating(value.rating ?? value.value);
-  const votes = toInt(value.votes, 0);
-
-  if (rating === null && votes === null) return null;
-
-  return { rating, votes };
-}
-
-function readRatings(raw: RawRecord): TitleRatings {
-  const source = isRecord(raw.ratings) ? raw.ratings : {};
-
-  return {
-    imdb: readProviderRating(source.imdb),
-    tmdb: readProviderRating(source.tmdb),
-    mdblist: readProviderRating(source.mdblist),
-  };
 }
 function toHttpsUrl(value: unknown): string | null {
   const text = toText(value);
@@ -290,7 +255,7 @@ export function mapDetailsResponse(
     tmdb: fromProvider.tmdb ?? parsedRequested.data.tmdb ?? null,
     mdblist: fromProvider.mdblist,
   };
-  const ratings = readRatings(raw);
+  const { ratings, primaryRating: rating } = getTitleRatings(raw);
 
   return {
     ids,
@@ -305,9 +270,9 @@ export function mapDetailsResponse(
     director: toTextArray(raw.director ?? raw.directors),
     cast: toTextArray(raw.cast ?? raw.actors),
     credits: null,
-   backdrop: toHttpsUrl(raw.backdrop ?? raw.backdropUrl),
-rating: ratings.imdb?.rating ?? toRating(raw.rating ?? raw.imdbRating),
-ratings,
+    backdrop: toHttpsUrl(raw.backdrop ?? raw.backdropUrl),
+    rating,
+    ratings,
   };
 }
 

@@ -38,16 +38,6 @@ export interface Credits {
   guests: CrewMember[];
   counts: CreditsCounts | null;
 }
-export interface ProviderRating {
-  rating: number | null;
-  votes: number | null;
-}
-
-export interface TitleRatings {
-  imdb: ProviderRating | null;
-  tmdb: ProviderRating | null;
-  mdblist: ProviderRating | null;
-}
 export interface TitleDetails {
   ids: TitleIds;
   title: string;
@@ -68,7 +58,7 @@ export interface TitleDetails {
 
   backdrop: string | null;
   rating: number | null;
-   ratings: TitleRatings;
+  ratings: import("../ratings/ratings.types").TitleRatings;
 }
 
 export interface Pagination {

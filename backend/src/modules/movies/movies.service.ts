@@ -66,9 +66,6 @@ export async function getTitleDetails(
   };
 
   const result = await reeldbGet("/v1/title", titleParams);
-console.log("RAW REELDB TITLE RESPONSE:");
-
-
   if (!result.found) {
     throw new AppError(
       404,
@@ -76,11 +73,6 @@ console.log("RAW REELDB TITLE RESPONSE:");
       "No title was found for that ID.",
     );
   }
-  console.dir(result.data, {
-  depth: null,
-  colors: true,
-});
-
   const details = mapDetailsResponse(
     result.data,
     isImdbId
