@@ -255,7 +255,17 @@ export function mapDetailsResponse(
     tmdb: fromProvider.tmdb ?? parsedRequested.data.tmdb ?? null,
     mdblist: fromProvider.mdblist,
   };
-  const { ratings, primaryRating: rating, featuredRating } = getTitleRatings(raw);
+  const mappedRatings = getTitleRatings(raw);
+  const providerRatings = mappedRatings.ratings;
+  const toLegacyRating = (entry: typeof providerRatings.imdb) =>
+    entry ? { rating: entry.rating, votes: entry.votes } : null;
+  const ratings = {
+    imdb: toLegacyRating(providerRatings.imdb),
+    tmdb: toLegacyRating(providerRatings.tmdb),
+    mdblist: toLegacyRating(providerRatings.mdblist),
+  };
+  const rating = mappedRatings.primaryRating;
+  const featuredRating = mappedRatings.featuredRating;
 
   return {
     ids,
@@ -273,6 +283,7 @@ export function mapDetailsResponse(
     backdrop: toHttpsUrl(raw.backdrop ?? raw.backdropUrl),
     rating,
     ratings,
+    providerRatings,
     featuredRating,
   };
 }
