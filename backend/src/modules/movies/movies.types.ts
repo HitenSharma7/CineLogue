@@ -59,6 +59,7 @@ export interface TitleDetails {
   backdrop: string | null;
   rating: number | null;
   ratings: import("../ratings/ratings.types").TitleRatings;
+  featuredRating: import("../ratings/ratings.types").FeaturedRating | null;
 }
 
 export interface Pagination {
