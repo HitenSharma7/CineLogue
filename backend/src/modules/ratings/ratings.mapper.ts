@@ -24,6 +24,7 @@ const PROVIDERS: ReadonlyArray<{
   { id: "letterboxd", label: "Letterboxd", scale: 5, aliases: ["letterboxd"] },
   { id: "rogerebert", label: "RogerEbert", scale: 4, aliases: ["rogerebert", "roger_ebert"] },
   { id: "myanimelist", label: "MyAnimeList", scale: 10, aliases: ["myanimelist", "my_anime_list", "mal"] },
+  { id: "kinopoisk", label: "Kinopoisk", scale: 10, aliases: ["kinopoisk"] },
 ];
 
 function isRecord(value: unknown): value is RawRecord {
@@ -126,6 +127,7 @@ function makeFeaturedRating(
     "myanimelist",
     "mdblist",
     "rogerebert",
+    "kinopoisk",
   ];
 
   for (const provider of preference) {
