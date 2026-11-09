@@ -255,7 +255,7 @@ export function mapDetailsResponse(
     tmdb: fromProvider.tmdb ?? parsedRequested.data.tmdb ?? null,
     mdblist: fromProvider.mdblist,
   };
-  const { ratings, primaryRating: rating } = getTitleRatings(raw);
+  const { ratings, primaryRating: rating, featuredRating } = getTitleRatings(raw);
 
   return {
     ids,
@@ -273,6 +273,7 @@ export function mapDetailsResponse(
     backdrop: toHttpsUrl(raw.backdrop ?? raw.backdropUrl),
     rating,
     ratings,
+    featuredRating,
   };
 }
 
