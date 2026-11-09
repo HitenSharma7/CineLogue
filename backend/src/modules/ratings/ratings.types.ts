@@ -2,7 +2,7 @@
  * Rating scales are provider-native. Never compare or average scores across
  * providers without an explicit normalization policy.
  */
-export type RatingScale = 5 | 10 | 100;
+export type RatingScale = 4 | 5 | 10 | 100;
 
 export type RatingProviderId =
   | "imdb"
