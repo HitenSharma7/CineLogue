@@ -1,7 +1,10 @@
 import { mapTitleRatings } from "./ratings.mapper";
 import type { MappedTitleRatings } from "./ratings.types";
 
-/** Domain service for normalizing ratings embedded in a ReelDB title payload. */
+/**
+ * Domain entry point for ratings embedded in a ReelDB title payload.
+ * Keep provider parsing in the mapper so all API consumers get identical rules.
+ */
 export function getTitleRatings(rawTitle: unknown): MappedTitleRatings {
   return mapTitleRatings(rawTitle);
 }
