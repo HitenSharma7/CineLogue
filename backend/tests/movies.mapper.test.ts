@@ -321,7 +321,10 @@ describe("mapDetailsResponse", () => {
     { imdb: "invalid" },
     { imdb: "tt1234567", tmdb: -1 },
     { imdb: "tt1234567", tmdb: 1.5 },
-    { imdb: "tt1234567", tmdb: Number.MAX_SAFE_INTEGER + 1 },
+    {
+      imdb: "tt1234567",
+      tmdb: Number.MAX_SAFE_INTEGER + 1,
+    },
   ])("rejects invalid requested IDs: %o", (ids) => {
     expect(() => mapDetailsResponse({ title: "Example Movie" }, ids))
       .toThrow(
@@ -347,5 +350,308 @@ describe("mapDetailsResponse", () => {
     expect(result.year).toBeNull();
     expect(result.poster).toBeNull();
     expect(result.plot).toBeNull();
+  });
+
+  // Provider ratings: core behaviour
+
+  it("maps IMDb, TMDB and MDBList ratings independently", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "The Matrix",
+        ratings: {
+          imdb: { rating: 8.7, votes: 2100000 },
+          tmdb: { rating: 8.2, votes: 25000 },
+          mdblist: { rating: 8.5, votes: 1500 },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings).toEqual({
+      imdb: { rating: 8.7, votes: 2100000 },
+      tmdb: { rating: 8.2, votes: 25000 },
+      mdblist: { rating: 8.5, votes: 1500 },
+    });
+
+    expect(result.rating).toBe(8.7);
+  });
+
+  it("returns null for all providers when ratings are missing", () => {
+    const result = mapDetailsResponse(
+      { title: "The Matrix" },
+      requested,
+    );
+
+    expect(result.ratings).toEqual({
+      imdb: null,
+      tmdb: null,
+      mdblist: null,
+    });
+  });
+
+  it("normalizes invalid ratings while preserving valid vote counts", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "The Matrix",
+        ratings: {
+          imdb: { rating: 11, votes: 1000 },
+          tmdb: { rating: 8.2, votes: 2000 },
+          mdblist: { rating: -1, votes: 3000 },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings).toEqual({
+      imdb: { rating: null, votes: 1000 },
+      tmdb: { rating: 8.2, votes: 2000 },
+      mdblist: { rating: null, votes: 3000 },
+    });
+  });
+
+  it("accepts numeric strings for ratings and votes", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "The Matrix",
+        ratings: {
+          imdb: { rating: "8.7", votes: "2100000" },
+          tmdb: { rating: "8.2", votes: "25000" },
+          mdblist: { rating: "8.5", votes: "1500" },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings).toEqual({
+      imdb: { rating: 8.7, votes: 2100000 },
+      tmdb: { rating: 8.2, votes: 25000 },
+      mdblist: { rating: 8.5, votes: 1500 },
+    });
+  });
+
+  it("uses the legacy rating field when IMDb provider rating is unavailable", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "The Matrix",
+        rating: 7.9,
+        ratings: {
+          imdb: null,
+          tmdb: { rating: 8.2, votes: 25000 },
+        },
+      },
+      requested,
+    );
+
+    expect(result.rating).toBe(7.9);
+    expect(result.ratings.imdb).toBeNull();
+  });
+
+  // Provider isolation and precedence
+
+  it("preserves a valid zero rating and zero votes", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        ratings: {
+          imdb: { rating: 0, votes: 0 },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings.imdb).toEqual({
+      rating: 0,
+      votes: 0,
+    });
+
+    expect(result.rating).toBe(0);
+  });
+
+  it("does not allow one provider rating to populate another provider", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        ratings: {
+          imdb: { rating: 8.4, votes: 1000 },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings.imdb).toEqual({
+      rating: 8.4,
+      votes: 1000,
+    });
+    expect(result.ratings.tmdb).toBeNull();
+    expect(result.ratings.mdblist).toBeNull();
+  });
+
+  it("supports the value alias when rating is unavailable", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        ratings: {
+          imdb: { value: 8.6, votes: 1200 },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings.imdb).toEqual({
+      rating: 8.6,
+      votes: 1200,
+    });
+  });
+
+  it("prefers rating over value when both are provided", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        ratings: {
+          imdb: {
+            rating: 8.5,
+            value: 9.1,
+            votes: 1000,
+          },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings.imdb).toEqual({
+      rating: 8.5,
+      votes: 1000,
+    });
+  });
+
+  it("prefers the provider IMDb rating over the legacy rating", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        rating: 7.5,
+        ratings: {
+          imdb: { rating: 8.9, votes: 2000 },
+        },
+      },
+      requested,
+    );
+
+    expect(result.rating).toBe(8.9);
+  });
+
+  // Invalid rating values
+
+  it.each([
+    "NaN",
+    "Infinity",
+    "-Infinity",
+    "",
+    "   ",
+    "not-a-number",
+  ])("rejects invalid IMDb rating strings: %s", (rating) => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        ratings: {
+          imdb: { rating, votes: 1000 },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings.imdb).toEqual({
+      rating: null,
+      votes: 1000,
+    });
+  });
+
+  it.each([
+    -1,
+    10.01,
+    11,
+    100,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.NEGATIVE_INFINITY,
+  ])("rejects invalid numeric ratings: %s", (rating) => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        ratings: {
+          imdb: { rating, votes: 1000 },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings.imdb).toEqual({
+      rating: null,
+      votes: 1000,
+    });
+  });
+
+  // Invalid vote counts
+
+  it.each([
+    -1,
+    1.5,
+    "1.5",
+    "invalid",
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+    Number.MAX_SAFE_INTEGER + 1,
+  ])("rejects invalid vote counts: %s", (votes) => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        ratings: {
+          imdb: { rating: 8.5, votes },
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings.imdb).toEqual({
+      rating: 8.5,
+      votes: null,
+    });
+  });
+
+  // Malformed provider payloads
+
+  it.each([
+    null,
+    undefined,
+    [],
+    "invalid",
+    123,
+  ])("ignores malformed provider rating objects: %s", (providerRating) => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        ratings: {
+          imdb: providerRating,
+        },
+      },
+      requested,
+    );
+
+    expect(result.ratings.imdb).toBeNull();
+  });
+
+  it("handles a malformed ratings container safely", () => {
+    const result = mapDetailsResponse(
+      {
+        title: "Example Movie",
+        ratings: [],
+      },
+      requested,
+    );
+
+    expect(result.ratings).toEqual({
+      imdb: null,
+      tmdb: null,
+      mdblist: null,
+    });
   });
 });
