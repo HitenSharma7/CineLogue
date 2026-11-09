@@ -13,7 +13,8 @@ export type RatingProviderId =
   | "trakt"
   | "letterboxd"
   | "rogerebert"
-  | "myanimelist";
+  | "myanimelist"
+  | "kinopoisk";
 
 export interface ProviderRating {
   /** Provider-native score. Null means the provider has no usable score. */
