@@ -11,11 +11,11 @@ import { Screen } from '@/components/Screen';
 import { Skeleton } from '@/components/Skeleton';
 import { StateView } from '@/components/StateView';
 import { BRAND } from '@/config/brand';
-import { COMING_SOON, COMING_SOON_SUBTITLE, COMING_SOON_TITLE } from '@/config/comingSoon';
 import { EDITORS_PICKS, EDITORS_PICKS_LABEL, EDITORS_PICKS_SUBTITLE, HERO_COUNT } from '@/config/editorsPicks';
 import { HALL_OF_FAME, HALL_OF_FAME_SUBTITLE, HALL_OF_FAME_TITLE } from '@/config/hallOfFame';
 import { MIN_TOUCH_TARGET, RADII, SPACING } from '@/constants/layout';
 import { useEditorsPicks } from '@/hooks/useEditorsPicks';
+import { useHomeCollections } from '@/hooks/useHomeCollections';
 import { useOpenTitle } from '@/hooks/useOpenTitle';
 import { useReducedMotionPref } from '@/hooks/useReducedMotionPref';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -28,25 +28,6 @@ const HEADER_ROW_HEIGHT = Math.max(AVATAR_SIZE, MIN_TOUCH_TARGET);
 function greeting(): string {
   const h = new Date().getHours();
   return h < 5 ? 'Late night' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-}
-
-/** Parses provider release dates without treating a year-only value as a confirmed date. */
-function releaseDay(value: string | null): number | null {
-  if (!value || /^\d{4}$/.test(value.trim())) return null;
-
-  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
-  const date = dateOnly
-    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
-    : new Date(value);
-
-  if (Number.isNaN(date.getTime())) return null;
-  date.setHours(0, 0, 0, 0);
-  return date.getTime();
-}
-
-function releaseCaption(value: string | null): string | null {
-  const day = releaseDay(value);
-  return day === null ? null : new Date(day).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 /** Deliberate placeholder: no account exists yet, so no fake name or photo. */
@@ -73,7 +54,7 @@ export function HomeScreen() {
   const openTitle = useOpenTitle();
   const picks = useEditorsPicks(EDITORS_PICKS);
   const hallOfFame = useEditorsPicks(HALL_OF_FAME);
-  const comingSoon = useEditorsPicks(COMING_SOON);
+  const { collections, retry: retryCollection } = useHomeCollections();
 
   const goSearch = useCallback(() => router.push('/(tabs)/search'), [router]);
   const goProfile = useCallback(() => router.push('/(tabs)/profile'), [router]);
@@ -84,19 +65,6 @@ export function HomeScreen() {
     const withArt = picks.items.filter((t) => t.poster);
     return (withArt.length > 0 ? withArt : picks.items).slice(0, HERO_COUNT);
   }, [picks.items]);
-
-  // Only show titles with a known, still-future release date; nearest releases appear first.
-  const upcomingItems = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return comingSoon.items
-      .map((item) => ({ item, day: releaseDay(item.releaseDate) }))
-      .filter((entry): entry is { item: typeof comingSoon.items[number]; day: number } =>
-        entry.day !== null && entry.day >= today.getTime(),
-      )
-      .sort((a, b) => a.day - b.day)
-      .map(({ item }) => item);
-  }, [comingSoon.items]);
 
   // Floating greeting row: where it starts and how much room the hero must reserve for it.
   const headerTop = insets.top + SPACING.md;
@@ -202,21 +170,22 @@ export function HomeScreen() {
           />
         </Animated.View>
 
-        <Animated.View entering={enter(2)}>
-          <PosterShelf
-            title={COMING_SOON_TITLE}
-            subtitle={COMING_SOON_SUBTITLE}
-            size="lg"
-            status={comingSoon.status}
-            items={upcomingItems}
-            errorMessage={comingSoon.error?.message}
-            onOpen={openTitle}
-            onRetry={comingSoon.retry}
-            getCaption={(item) => releaseCaption(item.releaseDate ?? null)}
-          />
-        </Animated.View>
+        {collections.map((collection, index) => (
+          <Animated.View key={collection.id} entering={enter(index + 2)}>
+            <PosterShelf
+              title={collection.title}
+              subtitle={collection.subtitle}
+              size="lg"
+              status={collection.status}
+              items={collection.items}
+              errorMessage={collection.error?.message}
+              onOpen={openTitle}
+              onRetry={() => retryCollection(collection.id)}
+            />
+          </Animated.View>
+        ))}
 
-        <Animated.View entering={enter(3)} style={{ paddingHorizontal: r.gutter }}>
+        <Animated.View entering={enter(collections.length + 2)} style={{ paddingHorizontal: r.gutter }}>
           <View style={{ padding: SPACING.xl, borderRadius: RADII.xl, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, gap: SPACING.md, overflow: 'hidden' }}>
             <View pointerEvents="none" style={{ position: 'absolute', right: -50, top: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: theme.colors.accent, opacity: theme.isDark ? 0.22 : 0.12 }} />
             <AppText style={{ fontSize: 26, lineHeight: 32, fontWeight: '800' }} accessibilityRole="header">
