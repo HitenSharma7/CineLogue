@@ -10,7 +10,7 @@ import { useTheme } from '@/styles/ThemeProvider';
 import type { TitleSummary } from '@/type/movie';
 
 /** Anything with these fields fits (TitleSummary or TitleDetails). */
-export type ShelfItem = Pick<TitleSummary, 'ids' | 'title' | 'year' | 'type' | 'poster'> & { releaseDate?: string | null };
+export type ShelfItem = Pick<TitleSummary, 'ids' | 'title' | 'year' | 'type' | 'poster'>;
 export type ShelfStatus = 'ready' | 'loading' | 'error';
 
 type Props = {
@@ -23,13 +23,12 @@ type Props = {
   errorMessage?: string;
   onOpen?: (t: ShelfItem) => void;
   onRetry?: () => void;
-  getCaption?: (item: ShelfItem) => string | null;
 };
 
-const keyOf = (t: ShelfItem) => t.ids.imdb ?? `tmdb:${t.ids.tmdb}`;
+const keyOf = (t: ShelfItem) => t.ids.imdb ?? (t.ids.tmdb !== null ? `tmdb:${t.ids.tmdb}` : `mdblist:${t.ids.mdblist}`);
 
 /** Editorial section header + horizontally browsable posters with loading/error states. */
-export function PosterShelf({ title, subtitle, status, items, size = 'md', errorMessage, onOpen, onRetry, getCaption }: Props) {
+export function PosterShelf({ title, subtitle, status, items, size = 'md', errorMessage, onOpen, onRetry }: Props) {
   const { theme } = useTheme();
   const r = useResponsive();
   const posterW = size === 'lg' ? (r.isTablet ? 200 : r.sizeClass === 'compact' ? 136 : 152) : r.isTablet ? 150 : 120;
@@ -38,9 +37,9 @@ export function PosterShelf({ title, subtitle, status, items, size = 'md', error
 
   const renderItem = useCallback(
     ({ item }: { item: ShelfItem }) => (
-      <MoviePoster uri={item.poster} title={item.title} year={item.year} caption={getCaption?.(item)} width={posterW} onPress={() => onOpen?.(item)} />
+      <MoviePoster uri={item.poster} title={item.title} year={item.year} width={posterW} onPress={() => onOpen?.(item)} />
     ),
-    [posterW, onOpen, getCaption],
+    [posterW, onOpen],
   );
 
   if (status === 'ready' && (!items || items.length === 0)) return null;
