@@ -12,15 +12,17 @@ type Props = {
   width: number;
   onPress?: () => void;
   showCaption?: boolean;
+  caption?: string | null;
 };
 
 /** Poster with fixed aspect ratio (no layout shift), cache, and failure fallback. */
-function MoviePosterBase({ uri, title, year, width, onPress, showCaption = true }: Props) {
+function MoviePosterBase({ uri, title, year, width, onPress, showCaption = true, caption }: Props) {
   const { theme } = useTheme();
   const [failed, setFailed] = useState(false);
   const height = Math.round(width / POSTER_ASPECT);
   const missing = !uri || failed;
-  const label = year ? `${title}, ${year}` : title;
+  const captionText = caption ?? (year ? String(year) : null);
+  const label = captionText ? `${title}, ${captionText}` : title;
 
   return (
     <Pressable
@@ -64,7 +66,7 @@ function MoviePosterBase({ uri, title, year, width, onPress, showCaption = true 
       {showCaption ? (
         <View style={{ paddingTop: SPACING.sm }}>
           <AppText variant="caption" numberOfLines={2}>{title}</AppText>
-          {year ? <AppText variant="caption" muted>{year}</AppText> : null}
+          {captionText ? <AppText variant="caption" muted numberOfLines={1}>{captionText}</AppText> : null}
         </View>
       ) : null}
     </Pressable>
