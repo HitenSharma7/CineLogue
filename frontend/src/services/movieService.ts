@@ -462,6 +462,41 @@ credits,
   };
 }
 
+
+export type HomeCollection = {
+  id: string;
+  title: string;
+  subtitle: string;
+  genre: string;
+  results: TitleSummary[];
+};
+
+/** Loads Home shelves whose membership has been verified against ReelDB title genres. */
+export async function getHomeCollections(signal?: AbortSignal): Promise<HomeCollection[]> {
+  const body = await apiGet(`${ENV.moviesPath}/home-collections`, { signal });
+  const data = unwrap(body);
+  if (!isObj(data) || !Array.isArray(data.collections)) {
+    throw new ApiError('invalid-response', 'Home collections response was incomplete.');
+  }
+
+  return data.collections.flatMap((entry): HomeCollection[] => {
+    if (!isObj(entry) || typeof entry.id !== 'string' ||
+        typeof entry.title !== 'string' || typeof entry.genre !== 'string' ||
+        !Array.isArray(entry.results)) return [];
+    const results = entry.results.flatMap((item) => {
+      const summary = readSummary(item);
+      return summary && summary.poster ? [summary] : [];
+    });
+    return [{
+      id: entry.id,
+      title: entry.title,
+      subtitle: typeof entry.subtitle === 'string' ? entry.subtitle : '',
+      genre: entry.genre,
+      results,
+    }];
+  });
+}
+
 /* ---------- Navigation helpers ---------- */
 
 export function asTitleType(
