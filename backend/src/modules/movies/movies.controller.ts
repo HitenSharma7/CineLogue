@@ -8,6 +8,7 @@ import type {
   TitleIdParams,
 } from "./movies.validation";
 import { GENRE_CATALOGUE } from "./genres/genre.catalogue";
+import { getHomeCollections } from "./home-collections.service";
 
 export const searchMovies: RequestHandler = async (_req, res) => {
   const query = getValidated<SearchQuery>(res, "query");
@@ -29,6 +30,11 @@ export const getMovieDetails: RequestHandler = async (_req, res) => {
     data: result,
   });
 };
+export const getHomeMovieCollections: RequestHandler = async (_req, res) => {
+  const result = await getHomeCollections();
+  res.status(200).json({ success: true, data: result });
+};
+
 export const getGenres: RequestHandler = async (_req, res) => {
   res.status(200).json({
     success: true,
