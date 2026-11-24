@@ -44,6 +44,11 @@ function releaseDay(value: string | null): number | null {
   return date.getTime();
 }
 
+function releaseCaption(value: string | null): string | null {
+  const day = releaseDay(value);
+  return day === null ? null : new Date(day).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 /** Deliberate placeholder: no account exists yet, so no fake name or photo. */
 function AvatarPlaceholder({ size = AVATAR_SIZE }: { size?: number }) {
   const { theme } = useTheme();
@@ -207,6 +212,7 @@ export function HomeScreen() {
             errorMessage={comingSoon.error?.message}
             onOpen={openTitle}
             onRetry={comingSoon.retry}
+            getCaption={(item) => releaseCaption(item.releaseDate ?? null)}
           />
         </Animated.View>
 
