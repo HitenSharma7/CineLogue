@@ -26,7 +26,7 @@ type CollectionResult = {
 };
 
 function normalizeGenre(value: string): string {
-  const normalized = value.trim().toLowerCase().replace(/\\s+/g, " ");
+  const normalized = value.trim().toLowerCase().replace(/\s+/g, " ");
   if (normalized === "sci-fi" || normalized === "science-fiction") return "science fiction";
   return normalized;
 }
