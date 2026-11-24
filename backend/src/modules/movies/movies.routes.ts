@@ -9,9 +9,15 @@ import {
 import {
   searchMovies,
   getMovieDetails,
+  getHomeMovieCollections,
 } from "./movies.controller";
 
 const router = Router();
+
+router.get(
+  "/home-collections",
+  getHomeMovieCollections,
+);
 
 router.get(
   "/search",
